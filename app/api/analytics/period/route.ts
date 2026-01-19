@@ -29,6 +29,60 @@ export async function GET(request: Request) {
 
         if (error) throw error;
 
+        // Fetch camera details with average stats for the period
+        const { data: cameraDetailsData, error: cameraError } = await supabase
+            .from('camera_daily_data')
+            .select(`
+                camera_id,
+                is_online,
+                uptime_pct,
+                cameras (
+                    id,
+                    code,
+                    name,
+                    location
+                )
+            `)
+            .gte('date', start)
+            .lte('date', end);
+
+        if (cameraError) throw cameraError;
+
+        // Group by camera and calculate averages
+        const cameraStats = new Map();
+
+        cameraDetailsData?.forEach((record: any) => {
+            const cameraId = record.camera_id;
+            if (!cameraStats.has(cameraId)) {
+                cameraStats.set(cameraId, {
+                    camera_id: cameraId,
+                    camera_code: record.cameras.code,
+                    camera_name: record.cameras.name,
+                    camera_location: record.cameras.location,
+                    total_days: 0,
+                    online_days: 0,
+                    total_uptime: 0
+                });
+            }
+
+            const stats = cameraStats.get(cameraId);
+            stats.total_days++;
+            if (record.is_online) stats.online_days++;
+            stats.total_uptime += record.uptime_pct || 0;
+        });
+
+        // Calculate averages and format camera list
+        const cameraList = Array.from(cameraStats.values()).map((stats: any) => ({
+            camera_id: stats.camera_id,
+            code: stats.camera_code,
+            name: stats.camera_name,
+            location: stats.camera_location,
+            avg_uptime: stats.total_days > 0 ? (stats.total_uptime / stats.total_days) : 0,
+            online_percentage: stats.total_days > 0 ? ((stats.online_days / stats.total_days) * 100) : 0,
+            online_days: stats.online_days,
+            total_days: stats.total_days
+        })).sort((a, b) => a.code.localeCompare(b.code));
+
         // Calculate average summary
         const summary = {
             total_cameras: analyticsData.length > 0 ? analyticsData[0].total_cameras : 0,
@@ -48,6 +102,7 @@ export async function GET(request: Request) {
             end,
             days: analyticsData.length,
             summary,
+            cameras: cameraList,
             data: analyticsData
         });
     } catch (error: any) {

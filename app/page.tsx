@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Toast from '@/components/Toast';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import DatePicker from '@/components/DatePicker';
+import { generatePeriodAnalyticsPDF } from '@/utils/analyticsPdfGenerator';
 
 type CameraData = {
     id: number;
@@ -63,6 +64,7 @@ export default function Analytics() {
         avg_uptime: 0,
         total_incidents: 0
     });
+    const [periodCameras, setPeriodCameras] = useState<any[]>([]);
 
     // Daily Camera Data States
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
@@ -113,6 +115,27 @@ export default function Analytics() {
         fetchDailyCameraData();
     }, [selectedDate]);
 
+    // Fluent Design: Reveal Effect Cursor Tracking
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            const revealElement = target.closest('.fluent-reveal');
+
+            if (revealElement) {
+                const rect = revealElement.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                (revealElement as HTMLElement).style.setProperty('--mouse-x', `${x}px`);
+                (revealElement as HTMLElement).style.setProperty('--mouse-y', `${y}px`);
+            }
+        };
+
+        document.addEventListener('mousemove', handleMouseMove);
+        return () => document.removeEventListener('mousemove', handleMouseMove);
+    }, []);
+
+
     const fetchPeriodAnalytics = async () => {
         try {
             let startDate: string;
@@ -142,6 +165,7 @@ export default function Analytics() {
 
             if (data.success) {
                 setPeriodSummary(data.summary);
+                setPeriodCameras(data.cameras || []);
             }
         } catch (error) {
             console.error('Error fetching period analytics:', error);
@@ -335,6 +359,45 @@ export default function Analytics() {
         return `${new Date(customStartDate).toLocaleDateString('id-ID')} - ${new Date(customEndDate).toLocaleDateString('id-ID')}`;
     };
 
+    const handleGenerateAnalyticsPDF = async () => {
+        try {
+            let startDate: string;
+            let endDate: string;
+
+            if (analysisPeriod === 'custom') {
+                startDate = customStartDate;
+                endDate = customEndDate;
+            } else {
+                const start = new Date();
+                const end = new Date();
+
+                if (analysisPeriod === 'weekly') {
+                    start.setDate(start.getDate() - 7);
+                } else if (analysisPeriod === 'monthly') {
+                    start.setMonth(start.getMonth() - 1);
+                } else {
+                    start.setFullYear(start.getFullYear() - 1);
+                }
+
+                startDate = start.toISOString().slice(0, 10);
+                endDate = end.toISOString().slice(0, 10);
+            }
+
+            await generatePeriodAnalyticsPDF({
+                periodLabel: getPeriodLabel(),
+                startDate,
+                endDate,
+                summary: periodSummary,
+                cameras: periodCameras
+            });
+
+            setToast({ show: true, message: 'PDF Analytics berhasil di-generate!', type: 'success' });
+        } catch (error) {
+            console.error('Error generating analytics PDF:', error);
+            setToast({ show: true, message: 'Gagal generate PDF Analytics', type: 'error' });
+        }
+    };
+
     // Pagination
     const totalPages = Math.ceil(cameraData.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -347,25 +410,36 @@ export default function Analytics() {
 
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-            {/* Header */}
-            <div className="bg-white shadow-xl border-b-2 border-blue-100">
-                <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+            {/* Header with Fluent Design */}
+            <div className="bg-white fluent-shadow-16 border-b-2 border-blue-100 sticky top-0 z-50">
+                <div className="max-w-7xl mx-auto px-6 py-6">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <img
-                                src="/betriclogoblue.png"
-                                alt="Betric Logo"
-                                className="h-16 w-auto"
-                            />
+                        <div className="flex items-center gap-4 animate-fade-in">
+                            <div className="fluent-card-interactive p-2 rounded-xl bg-gradient-to-br from-blue-50 to-white border border-blue-100">
+                                <img
+                                    src="/betriclogoblue.png"
+                                    alt="Betric Logo"
+                                    className="h-12 w-auto fluent-transition"
+                                />
+                            </div>
                             <div>
-                                <h1 className="text-3xl font-bold mb-2 text-slate-900">Dashboard Monitoring CCTV Betric</h1>
-                                <p className="text-slate-600 text-sm">Monitoring & Laporan Harian</p>
+                                <h1 className="text-2xl font-bold text-slate-900">Dashboard Monitoring CCTV Betric</h1>
+                                <p className="text-slate-600 text-sm mt-1">Monitoring & Laporan Harian</p>
                             </div>
                         </div>
-                        <div className="text-right">
-                            <div className="text-sm text-slate-600">Current Time</div>
-                            <div className="text-xl font-semibold text-slate-900">{currentTime || '--:--:--'}</div>
+                        <div className="text-right animate-fade-in">
+                            <div className="inline-flex items-center gap-3 bg-gradient-to-br from-blue-50 to-blue-100 px-5 py-3 rounded-xl border border-blue-200/50 fluent-shadow-4">
+                                <div>
+                                    <div className="text-xs text-blue-700 font-semibold uppercase tracking-wide">Current Time</div>
+                                    <div className="text-xl font-bold text-blue-900 tabular-nums">{currentTime || '--:--:--'}</div>
+                                </div>
+                                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center fluent-shadow-4">
+                                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -374,10 +448,10 @@ export default function Analytics() {
             <div className="max-w-7xl mx-auto px-6 py-8">
 
                 {/* SECTION 1: PERIOD ANALYTICS */}
-                <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+                <div className="fluent-card fluent-reveal p-8 mb-8 animate-scale-in">
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center">
-                            <div className="bg-blue-900 p-2 rounded-lg mr-3">
+                            <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-3 rounded-xl fluent-shadow-8 mr-3">
                                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                 </svg>
@@ -391,36 +465,36 @@ export default function Analytics() {
                         <div className="flex gap-3 mb-4">
                             <button
                                 onClick={() => setAnalysisPeriod('weekly')}
-                                className={`px-6 py-3 rounded-xl font-semibold transition-all ${analysisPeriod === 'weekly'
-                                    ? 'bg-blue-600 text-white shadow-lg'
-                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                className={`px-6 py-3 rounded-lg font-semibold fluent-transition relative overflow-hidden ${analysisPeriod === 'weekly'
+                                    ? 'bg-blue-600 text-white fluent-shadow-8'
+                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 fluent-shadow-4'
                                     }`}
                             >
                                 Mingguan
                             </button>
                             <button
                                 onClick={() => setAnalysisPeriod('monthly')}
-                                className={`px-6 py-3 rounded-xl font-semibold transition-all ${analysisPeriod === 'monthly'
-                                    ? 'bg-blue-600 text-white shadow-lg'
-                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                className={`px-6 py-3 rounded-lg font-semibold fluent-transition relative overflow-hidden ${analysisPeriod === 'monthly'
+                                    ? 'bg-blue-600 text-white fluent-shadow-8'
+                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 fluent-shadow-4'
                                     }`}
                             >
                                 Bulanan
                             </button>
                             <button
                                 onClick={() => setAnalysisPeriod('yearly')}
-                                className={`px-6 py-3 rounded-xl font-semibold transition-all ${analysisPeriod === 'yearly'
-                                    ? 'bg-blue-600 text-white shadow-lg'
-                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                className={`px-6 py-3 rounded-lg font-semibold fluent-transition relative overflow-hidden ${analysisPeriod === 'yearly'
+                                    ? 'bg-blue-600 text-white fluent-shadow-8'
+                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 fluent-shadow-4'
                                     }`}
                             >
                                 Tahunan
                             </button>
                             <button
                                 onClick={() => setAnalysisPeriod('custom')}
-                                className={`px-6 py-3 rounded-xl font-semibold transition-all ${analysisPeriod === 'custom'
-                                    ? 'bg-blue-600 text-white shadow-lg'
-                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                className={`px-6 py-3 rounded-lg font-semibold fluent-transition relative overflow-hidden ${analysisPeriod === 'custom'
+                                    ? 'bg-blue-600 text-white fluent-shadow-8'
+                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 fluent-shadow-4'
                                     }`}
                             >
                                 Custom Range
@@ -454,9 +528,9 @@ export default function Analytics() {
 
                     {/* Period Summary Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border-2 border-blue-200">
+                        <div className="fluent-card-interactive bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200/50 fluent-shadow-8">
                             <div className="flex items-center justify-between">
-                                <div className="bg-blue-600 p-3 rounded-xl">
+                                <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-3 rounded-xl fluent-shadow-4">
                                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                     </svg>
@@ -468,9 +542,9 @@ export default function Analytics() {
                             </div>
                         </div>
 
-                        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-6 border-2 border-emerald-200">
+                        <div className="fluent-card-interactive bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-6 border border-emerald-200/50 fluent-shadow-8">
                             <div className="flex items-center justify-between">
-                                <div className="bg-emerald-600 p-3 rounded-xl">
+                                <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 p-3 rounded-xl fluent-shadow-4">
                                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -482,9 +556,9 @@ export default function Analytics() {
                             </div>
                         </div>
 
-                        <div className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-xl p-6 border-2 border-rose-200">
+                        <div className="fluent-card-interactive bg-gradient-to-br from-rose-50 to-rose-100 rounded-xl p-6 border border-rose-200/50 fluent-shadow-8">
                             <div className="flex items-center justify-between">
-                                <div className="bg-rose-600 p-3 rounded-xl">
+                                <div className="bg-gradient-to-br from-rose-600 to-rose-700 p-3 rounded-xl fluent-shadow-4">
                                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -496,9 +570,9 @@ export default function Analytics() {
                             </div>
                         </div>
 
-                        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-6 border-2 border-amber-200">
+                        <div className="fluent-card-interactive bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-6 border border-amber-200/50 fluent-shadow-8">
                             <div className="flex items-center justify-between">
-                                <div className="bg-amber-600 p-3 rounded-xl">
+                                <div className="bg-gradient-to-br from-amber-600 to-amber-700 p-3 rounded-xl fluent-shadow-4">
                                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                                     </svg>
@@ -513,7 +587,7 @@ export default function Analytics() {
                 </div>
 
                 {/* SECTION 2: DAILY CAMERA DATA */}
-                <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+                <div className="fluent-card fluent-reveal p-8 mb-8 animate-scale-in">
                     <div className="flex items-center justify-between mb-6">
                         <DatePicker
                             label="Pilih Tanggal:"
@@ -741,7 +815,7 @@ export default function Analytics() {
                                                 currentItems.map((camera, idx) => (
                                                     <tr
                                                         key={camera.id}
-                                                        className={`border-b border-slate-200 hover:bg-blue-50 transition-colors ${idx % 2 === 0 ? 'bg-slate-50' : 'bg-white'}`}
+                                                        className={`fluent-table-row border-b border-slate-200 ${idx % 2 === 0 ? 'bg-slate-50' : 'bg-white'}`}
                                                     >
                                                         <td className="px-6 py-4 text-sm font-semibold text-slate-900">{indexOfFirstItem + idx + 1}</td>
                                                         <td className="px-6 py-4 text-sm font-bold text-slate-900">{camera.cameras.code}</td>
@@ -795,7 +869,7 @@ export default function Analytics() {
                                                                     type="number"
                                                                     min="0"
                                                                     step="0.01"
-                                                                    className="w-28 border-2 border-blue-200 rounded-lg px-3 py-2 text-sm text-blue-900 focus:ring-2 focus:ring-blue-900 focus:border-transparent transition-all"
+                                                                    className="fluent-input w-28 text-sm text-blue-900"
                                                                     placeholder="0"
                                                                     value={camera.usage?.replace(/[^0-9.]/g, '') || ''}
                                                                     onChange={e => handleInputChange(camera.camera_id, 'usage', e.target.value ? `${e.target.value} GB` : '')}
@@ -806,7 +880,7 @@ export default function Analytics() {
                                                         <td className="px-6 py-4">
                                                             <input
                                                                 type="text"
-                                                                className="w-full border-2 border-blue-200 rounded-lg px-3 py-2 text-sm text-blue-900 focus:ring-2 focus:ring-blue-900 focus:border-transparent transition-all"
+                                                                className="fluent-input w-full text-sm text-blue-900"
                                                                 placeholder="Keterangan"
                                                                 value={camera.note || ''}
                                                                 onChange={e => handleInputChange(camera.camera_id, 'note', e.target.value)}
@@ -888,6 +962,113 @@ export default function Analytics() {
                             </>
                         )}
                     </div>
+                </div>
+
+                {/* SECTION 3: GENERATE ANALYTICS PDF */}
+                <div className="fluent-card fluent-reveal p-8 mb-8 animate-scale-in">
+                    {/* Header */}
+                    <div className="border-b border-slate-200 pb-6 mb-6">
+                        <div className="flex items-center gap-4 mb-3">
+                            <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-bold text-slate-900">Generate PDF Analytics Summary</h2>
+                                <p className="text-sm text-slate-600 mt-1">Laporan analytics periode dengan detail 48 CCTV</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Info Summary */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        {/* Periode */}
+                        <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
+                                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <span className="text-xs font-semibold text-slate-600 uppercase">Periode</span>
+                            </div>
+                            <p className="text-base font-bold text-slate-900">{getPeriodLabel()}</p>
+                        </div>
+
+                        {/* Total Kamera */}
+                        <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
+                                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <span className="text-xs font-semibold text-slate-600 uppercase">Total CCTV</span>
+                            </div>
+                            <p className="text-base font-bold text-slate-900">{periodSummary.total_cameras} Kamera</p>
+                        </div>
+
+                        {/* Avg Uptime */}
+                        <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
+                                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                    </svg>
+                                </div>
+                                <span className="text-xs font-semibold text-slate-600 uppercase">Avg Uptime</span>
+                            </div>
+                            <p className="text-base font-bold text-slate-900">{periodSummary.avg_uptime.toFixed(1)}%</p>
+                        </div>
+                    </div>
+
+                    {/* PDF Content Info */}
+                    <div className="bg-blue-50 rounded-lg p-5 mb-6 border border-blue-200">
+                        <h3 className="text-sm font-bold text-slate-700 mb-3">Isi Laporan PDF:</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <div className="flex items-center gap-2 text-sm text-slate-700">
+                                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>Ringkasan Statistik Periode</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-slate-700">
+                                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>Detail Status 48 CCTV</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-slate-700">
+                                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>Persentase Online per Kamera</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-slate-700">
+                                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>Average Uptime & Color Coding</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Download Button */}
+                    <button
+                        onClick={handleGenerateAnalyticsPDF}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg px-6 py-4 transition-colors flex items-center justify-center gap-3"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span>Download PDF Analytics Summary</span>
+                    </button>
+
+                    {/* Footer Note */}
+                    <p className="text-xs text-slate-500 text-center mt-4">
+                        PDF akan berisi ringkasan statistik dan detail lengkap untuk periode yang dipilih
+                    </p>
                 </div>
             </div>
 

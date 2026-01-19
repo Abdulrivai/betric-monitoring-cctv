@@ -1,8 +1,43 @@
 @import "tailwindcss";
 
+/* ============================================
+   FLUENT DESIGN SYSTEM - CSS VARIABLES
+   ============================================ */
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Fluent Color System */
+  --fluent-primary: #0078d4;
+  --fluent-primary-hover: #106ebe;
+  --fluent-primary-pressed: #005a9e;
+  --fluent-accent: #0078d4;
+  --fluent-accent-light: rgba(0, 120, 212, 0.1);
+
+  /* Fluent Neutrals */
+  --fluent-bg-primary: #ffffff;
+  --fluent-bg-secondary: #f3f2f1;
+  --fluent-bg-tertiary: #edebe9;
+  --fluent-border: #e1dfdd;
+  --fluent-text-primary: #323130;
+  --fluent-text-secondary: #605e5c;
+  --fluent-text-tertiary: #8a8886;
+
+  /* Acrylic Material Variables */
+  --acrylic-bg: rgba(255, 255, 255, 0.7);
+  --acrylic-border: rgba(255, 255, 255, 0.9);
+  --acrylic-blur: 30px;
+
+  /* Fluent Shadow System */
+  --shadow-depth-4: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.132), 0 0.3px 0.9px 0 rgba(0, 0, 0, 0.108);
+  --shadow-depth-8: 0 3.2px 7.2px 0 rgba(0, 0, 0, 0.132), 0 0.6px 1.8px 0 rgba(0, 0, 0, 0.108);
+  --shadow-depth-16: 0 6.4px 14.4px 0 rgba(0, 0, 0, 0.132), 0 1.2px 3.6px 0 rgba(0, 0, 0, 0.108);
+  --shadow-depth-64: 0 25.6px 57.6px 0 rgba(0, 0, 0, 0.22), 0 4.8px 14.4px 0 rgba(0, 0, 0, 0.18);
+
+  /* Reveal Effect */
+  --reveal-size: 200px;
+  --reveal-opacity: 0.15;
 }
 
 @theme inline {
@@ -16,16 +51,256 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+
+    /* Dark mode acrylic */
+    --acrylic-bg: rgba(32, 32, 32, 0.7);
+    --acrylic-border: rgba(255, 255, 255, 0.1);
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom Animations */
+/* ============================================
+   FLUENT DESIGN - ACRYLIC MATERIAL
+   ============================================ */
+
+.fluent-acrylic {
+  background: var(--acrylic-bg);
+  backdrop-filter: blur(var(--acrylic-blur)) saturate(150%);
+  -webkit-backdrop-filter: blur(var(--acrylic-blur)) saturate(150%);
+  border: 1px solid var(--acrylic-border);
+}
+
+.fluent-acrylic-card {
+  background: var(--acrylic-bg);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: var(--shadow-depth-8);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fluent-acrylic-card:hover {
+  box-shadow: var(--shadow-depth-16);
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   FLUENT DESIGN - REVEAL EFFECT
+   ============================================ */
+
+.fluent-reveal {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.fluent-reveal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle var(--reveal-size) at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      rgba(255, 255, 255, var(--reveal-opacity)),
+      transparent);
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.fluent-reveal:hover::before {
+  opacity: 1;
+}
+
+.fluent-reveal>* {
+  position: relative;
+  z-index: 2;
+}
+
+/* Reveal for buttons */
+.fluent-button {
+  position: relative;
+  overflow: hidden;
+  background: var(--fluent-primary);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-depth-4);
+}
+
+.fluent-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.fluent-button:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.fluent-button:hover {
+  background: var(--fluent-primary-hover);
+  box-shadow: var(--shadow-depth-8);
+  transform: translateY(-1px);
+}
+
+.fluent-button:active {
+  background: var(--fluent-primary-pressed);
+  transform: translateY(0);
+}
+
+/* ============================================
+   FLUENT DESIGN - SHADOW SYSTEM
+   ============================================ */
+
+.fluent-shadow-4 {
+  box-shadow: var(--shadow-depth-4);
+}
+
+.fluent-shadow-8 {
+  box-shadow: var(--shadow-depth-8);
+}
+
+.fluent-shadow-16 {
+  box-shadow: var(--shadow-depth-16);
+}
+
+.fluent-shadow-64 {
+  box-shadow: var(--shadow-depth-64);
+}
+
+/* ============================================
+   FLUENT DESIGN - SMOOTH TRANSITIONS
+   ============================================ */
+
+.fluent-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fluent-transition-fast {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fluent-transition-slow {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   FLUENT DESIGN - CARD COMPONENTS
+   ============================================ */
+
+.fluent-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: var(--shadow-depth-8);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.fluent-card:hover {
+  box-shadow: var(--shadow-depth-16);
+  transform: translateY(-2px);
+}
+
+.fluent-card-interactive {
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.fluent-card-interactive::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(0, 120, 212, 0.05) 100%);
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.fluent-card-interactive:hover::after {
+  opacity: 1;
+}
+
+/* ============================================
+   FLUENT DESIGN - INPUT COMPONENTS
+   ============================================ */
+
+.fluent-input {
+  background: white;
+  border: 2px solid var(--fluent-border);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 14px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+
+.fluent-input:hover {
+  border-color: var(--fluent-text-tertiary);
+}
+
+.fluent-input:focus {
+  border-color: var(--fluent-primary);
+  box-shadow: 0 0 0 1px var(--fluent-primary);
+}
+
+/* ============================================
+   FLUENT DESIGN - TABLE COMPONENTS
+   ============================================ */
+
+.fluent-table-row {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.fluent-table-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--fluent-primary);
+  transform: scaleY(0);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fluent-table-row:hover {
+  background: rgba(0, 120, 212, 0.05);
+}
+
+.fluent-table-row:hover::before {
+  transform: scaleY(1);
+}
+
+/* ============================================
+   CUSTOM ANIMATIONS
+   ============================================ */
+
 @keyframes slide-in-right {
   from {
     transform: translateX(100%);
@@ -40,7 +315,7 @@ body {
 
 @keyframes scale-in {
   from {
-    transform: scale(0.9);
+    transform: scale(0.95);
     opacity: 0;
   }
 
@@ -50,10 +325,63 @@ body {
   }
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
 .animate-slide-in-right {
-  animation: slide-in-right 0.3s ease-out;
+  animation: slide-in-right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .animate-scale-in {
-  animation: scale-in 0.2s ease-out;
+  animation: scale-in 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   FLUENT DESIGN - UTILITY CLASSES
+   ============================================ */
+
+.fluent-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-depth-16);
+}
+
+.fluent-hover-scale:hover {
+  transform: scale(1.02);
+}
+
+.fluent-focus-visible:focus-visible {
+  outline: 2px solid var(--fluent-primary);
+  outline-offset: 2px;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Selection color */
+::selection {
+  background: var(--fluent-accent-light);
+  color: var(--fluent-primary);
 }

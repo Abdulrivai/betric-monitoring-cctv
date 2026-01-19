@@ -360,6 +360,23 @@ export default function Reports() {
                                                     </div>
                                                 </div>
                                                 <div
+                                                    className="px-4 py-3 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-emerald-100 cursor-pointer transition-all flex items-center gap-3 group border-b border-slate-100"
+                                                    onClick={() => {
+                                                        setMonitoringPerson('Restu Hendra');
+                                                        setShowPersonDropdown(false);
+                                                    }}
+                                                >
+                                                    <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center group-hover:bg-emerald-600 transition-colors">
+                                                        <svg className="w-5 h-5 text-emerald-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                        </svg>
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-semibold text-slate-900 group-hover:text-emerald-900">Restu Hendra</div>
+                                                        <div className="text-xs text-slate-500">Petugas Monitoring</div>
+                                                    </div>
+                                                </div>
+                                                <div
                                                     className="px-4 py-3 hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100 cursor-pointer transition-all flex items-center gap-3 group"
                                                     onClick={() => {
                                                         setMonitoringPerson('Nadzar Lutfi');
@@ -373,6 +390,23 @@ export default function Reports() {
                                                     </div>
                                                     <div>
                                                         <div className="font-semibold text-slate-900 group-hover:text-blue-900">Nadzar Lutfi</div>
+                                                        <div className="text-xs text-slate-500">Petugas Monitoring</div>
+                                                    </div>
+                                                </div>
+                                                <div
+                                                    className="px-4 py-3 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-emerald-100 cursor-pointer transition-all flex items-center gap-3 group border-b border-slate-100"
+                                                    onClick={() => {
+                                                        setMonitoringPerson('Toby Averous');
+                                                        setShowPersonDropdown(false);
+                                                    }}
+                                                >
+                                                    <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center group-hover:bg-emerald-600 transition-colors">
+                                                        <svg className="w-5 h-5 text-emerald-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                        </svg>
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-semibold text-slate-900 group-hover:text-emerald-900">Toby Averous</div>
                                                         <div className="text-xs text-slate-500">Petugas Monitoring</div>
                                                     </div>
                                                 </div>
